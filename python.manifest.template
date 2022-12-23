@@ -1,0 +1,67 @@
+loader.entrypoint = "file:{{ gramine.libos }}"
+libos.entrypoint = "{{ entrypoint }}"
+loader.log_level = "{{ log_level }}"
+
+loader.env.LD_LIBRARY_PATH = "{{ python.stdlib }}/lib:/lib:/usr/lib:{{ arch_libdir }}:/usr/{{ arch_libdir }}"
+loader.env.PYTHONDONTWRITEBYTECODE = "1"
+loader.env.TMP_PATH = "/tmp"
+loader.env.USER_DATA_PATH = "/data"
+loader.env.KEY_PATH = "/key"
+
+loader.argv_src_file = "file:args"
+
+loader.pal_internal_mem_size = "128M"
+
+sys.enable_extra_runtime_domain_names_conf = true
+
+fs.mounts = [
+  { path = "/lib", uri = "file:{{ gramine.runtimedir() }}" },
+  { path = "{{ arch_libdir }}", uri = "file:{{ arch_libdir }}" },
+  { path = "/usr", uri = "file:/usr" },
+  { path = "/etc", uri = "file:/etc" },
+  { path = "{{ python.stdlib }}", uri = "file:{{ python.stdlib }}" },
+  { path = "{{ python.distlib }}", uri = "file:{{ python.distlib }}" },
+  { path = "/usr/local/lib", uri = "file:/usr/local/lib" },
+  { path = "/app", uri = "file:{{ app_dir }}/" },
+  { path = "/tmp", type = "tmpfs" },
+  { path = "/data", uri = "file:data/", type = "encrypted",  key_name = "_sgx_mrenclave" },
+  { path = "/key", uri = "file:key/", type = "encrypted",  key_name = "_sgx_mrenclave" },
+]
+
+sgx.nonpie_binary = true
+sgx.remote_attestation = "dcap"
+sgx.enclave_size = "{{ enclave_size }}"
+sgx.thread_num = 256
+sgx.isvprodid = 1
+sgx.isvsvn = 10
+
+sgx.trusted_files = [
+  "file:{{ entrypoint }}",
+  "file:{{ gramine.libos }}",
+  "file:{{ gramine.runtimedir() }}/",
+  "file:{{ arch_libdir }}/",
+  "file:/usr/{{ arch_libdir }}/",
+  "file:{{ python.stdlib }}/",
+  "file:{{ python.distlib }}/",
+  "file:{{ python.get_path('stdlib', vars={'installed_base': '/usr/local'}) }}/",
+  "file:/etc/apt/apt.conf.d/",
+  "file:/etc/nsswitch.conf",
+  "file:/etc/group",
+  "file:/etc/passwd",
+  "file:/etc/gai.conf",
+  "file:/etc/fstab",
+  "file:/etc/localtime",
+  "file:/etc/mime.types",
+  "file:/usr/share/dpkg/cputable",
+  "file:/usr/share/dpkg/tupletable",
+  "file:/usr/bin/gcc",
+  "file:/usr/bin/ld",
+  "file:/usr/bin/as",
+  "file:/usr/bin/objdump",
+  "file:/usr/bin/uname",
+  "file:/usr/lib/ssl/openssl.cnf",
+  "file:/usr/share/zoneinfo/UTC",
+  "file:/usr/local/bin/mse-bootstrap",
+  "file:args",
+  "file:{{ app_dir }}/",
+]
