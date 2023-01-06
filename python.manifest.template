@@ -4,6 +4,8 @@ loader.log_level = "{{ log_level }}"
 
 loader.env.LD_LIBRARY_PATH = "{{ python.stdlib }}/lib:/lib:/usr/lib:{{ arch_libdir }}:/usr/{{ arch_libdir }}"
 loader.env.PYTHONDONTWRITEBYTECODE = "1"
+loader.env.PYTHONPYCACHEPREFIX = "/tmp"
+loader.env.PYTHONUNBUFFERED = "1"
 loader.env.TMP_PATH = "/tmp"
 loader.env.USER_DATA_PATH = "/data"
 loader.env.KEY_PATH = "/key"

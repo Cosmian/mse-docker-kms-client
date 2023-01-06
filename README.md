@@ -6,7 +6,7 @@ Base docker image used for Python web application launched with [MSE](https://co
 
 The docker image is built and released with GitHub Actions as below:
 
-```sh
+```console
 $ export BUILD_DATE="$(date "+%Y%m%d%H%M%S")"
 $ docker build -t mse-base:$BUILD_DATE .
 ```
@@ -25,7 +25,7 @@ RUN pip3 install "flask==2.2.2"
 
 replace `LAST_DATE_ON_GH_PACKAGES` with the last one on [pkgs/mse-base](https://github.com/Cosmian/mse-docker-base/pkgs/container/mse-base), then:
 
-```
+```console
 $ docker build -t mse-flask:2.2.2
 ```
 
@@ -33,7 +33,7 @@ $ docker build -t mse-flask:2.2.2
 
 First compress your Python flask application:
 
-```
+```console
 $ tree code
 code
 └── app.py

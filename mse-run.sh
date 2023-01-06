@@ -26,6 +26,7 @@ timeout_die() {
 }
 
 set_default_variables() {
+    REQUIREMENTS=0
     ENCLAVE_SIZE=""
     EXPIRATION_DATE=""
     NO_SSL=0
@@ -105,6 +106,11 @@ parse_args() {
             shift # past argument
             ;;
 
+            --requirements)
+            REQUIREMENTS=1
+            shift # past argument
+            ;;
+
             -*)
             usage
             ;;
@@ -133,6 +139,15 @@ export PYTHONPYCACHEPREFIX=/tmp
 echo "Untar the code..."
 mkdir -p "$CODE_PATH"
 tar xvf "$CODE_TARBALL" -C "$CODE_PATH"
+
+# Install dependencies
+# /!\ should not be used to verify MRENCLAVE on client side
+# even if you freeze all your dependencies in a requirements.txt file
+# there are side effects and hash digest of some files installed may differ
+if [ $REQUIREMENTS -eq 1 ] && [ -e "$CODE_PATH/requirements.txt" ]; then
+    echo "Installing deps..."
+    pip3 install -r $CODE_PATH/requirements.txt
+fi
 
 # Prepare the certificate if necessary
 if [ -n "$CERTIFICATE_PATH" ]; then
