@@ -10,6 +10,7 @@ usage() {
 }
 
 set_default_variables() {
+    REQUIREMENTS=0
     APPLICATION=""
     CODE_PATH="/app/code"
     DEBUG=""
@@ -29,6 +30,10 @@ parse_args() {
             DEBUG="--debug"
             shift # past argument
             ;;
+            --requirements)
+            REQUIREMENTS=1
+            shift # past argument
+            ;;
             -*)
             usage
             ;;
@@ -45,13 +50,14 @@ parse_args() {
 set_default_variables
 parse_args "$@"
 
-# Install dependencies if any
-if [ -e "$CODE_PATH/requirements.txt" ]; then
+# Don't write .pyc files
+export PYTHONDONTWRITEBYTECODE=1
+# Other directory for __pycache__ folders
+export PYTHONPYCACHEPREFIX=/tmp
+
+# Install dependencies
+if [ $REQUIREMENTS -eq 1 ] && [ -e "$CODE_PATH/requirements.txt" ]; then
     echo "Installing deps..."
-    # Don't write .pyc files
-    export PYTHONDONTWRITEBYTECODE=1
-    # Other directory for __pycache__ folders
-    export PYTHONPYCACHEPREFIX=/tmp
     pip install -r $CODE_PATH/requirements.txt
 fi
 
