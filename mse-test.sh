@@ -10,7 +10,6 @@ usage() {
 }
 
 set_default_variables() {
-    REQUIREMENTS=0
     APPLICATION=""
     CODE_PATH="/app/code"
     DEBUG=""
@@ -28,10 +27,6 @@ parse_args() {
             ;;
             --debug)
             DEBUG="--debug"
-            shift # past argument
-            ;;
-            --requirements)
-            REQUIREMENTS=1
             shift # past argument
             ;;
             -*)
@@ -56,7 +51,7 @@ export PYTHONDONTWRITEBYTECODE=1
 export PYTHONPYCACHEPREFIX=/tmp
 
 # Install dependencies
-if [ $REQUIREMENTS -eq 1 ] && [ -e "$CODE_PATH/requirements.txt" ]; then
+if [ -e "$CODE_PATH/requirements.txt" ]; then
     echo "Installing deps..."
     pip install -r $CODE_PATH/requirements.txt
 fi
