@@ -7,7 +7,7 @@ loader.env.PYTHONDONTWRITEBYTECODE = "1"
 loader.env.PYTHONPYCACHEPREFIX = "/tmp"
 loader.env.PYTHONUNBUFFERED = "1"
 loader.env.TMP_PATH = "/tmp"
-loader.env.USER_DATA_PATH = "/data"
+loader.env.USER_DATA_PATH = "/root"
 loader.env.KEY_PATH = "/key"
 
 loader.argv_src_file = "file:args"
@@ -26,7 +26,7 @@ fs.mounts = [
   { path = "/usr/local/lib", uri = "file:/usr/local/lib" },
   { path = "/app", uri = "file:{{ app_dir }}/" },
   { path = "/tmp", type = "tmpfs" },
-  { path = "/data", uri = "file:data/", type = "encrypted",  key_name = "_sgx_mrenclave" },
+  { path = "/root", uri = "file:data/", type = "encrypted",  key_name = "_sgx_mrenclave" },
   { path = "/key", uri = "file:key/", type = "encrypted",  key_name = "_sgx_mrenclave" },
 ]
 
