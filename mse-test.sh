@@ -58,7 +58,7 @@ fi
 pushd $CODE_PATH
 
 if [ -z "$DEBUG" ]; then
-    flask --app "$APPLICATION" run --host=0.0.0.0
+    PYTHONPATH="." flask --app "$APPLICATION" run --host=0.0.0.0
 else
-    flask --app "$APPLICATION" "$DEBUG" run --host=0.0.0.0
+    PYTHONPATH="." flask --app "$APPLICATION" "$DEBUG" run --host=0.0.0.0
 fi
