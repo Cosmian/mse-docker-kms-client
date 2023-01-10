@@ -26,6 +26,7 @@ timeout_die() {
 }
 
 set_default_variables() {
+    DEBUG=0
     ENCLAVE_SIZE=""
     EXPIRATION_DATE=""
     NO_SSL=0
@@ -33,8 +34,7 @@ set_default_variables() {
     CODE_TARBALL=""
     APPLICATION=""
     CERTIFICATE_PATH=""
-    APP_DIR="/app"
-    CODE_PATH="$APP_DIR/code"
+    APP_DIR="/mse-app"
     CERT_PATH="$APP_DIR/fullchain.pem"
     SGX_SIGNER_KEY="$HOME/.config/gramine/enclave-key.pem"
     DRY_RUN=0
@@ -105,6 +105,11 @@ parse_args() {
             shift # past argument
             ;;
 
+            --debug)
+            DEBUG=1
+            shift # past argument
+            ;;
+
             -*)
             usage
             ;;
@@ -131,16 +136,16 @@ export PYTHONDONTWRITEBYTECODE=1
 export PYTHONPYCACHEPREFIX=/tmp
 
 echo "Untar the code..."
-mkdir -p "$CODE_PATH"
-tar xvf "$CODE_TARBALL" -C "$CODE_PATH"
+mkdir -p "$APP_DIR"
+tar xvf "$CODE_TARBALL" -C "$APP_DIR"
 
 # Install dependencies
 # /!\ should not be used to verify MRENCLAVE on client side
 # even if you freeze all your dependencies in a requirements.txt file
 # there are side effects and hash digest of some files installed may differ
-if [ -e "$CODE_PATH/requirements.txt" ]; then
+if [ -e "$APP_DIR/requirements.txt" ]; then
     echo "Installing deps..."
-    pip install -r $CODE_PATH/requirements.txt
+    pip install -r $APP_DIR/requirements.txt
 fi
 
 # Prepare the certificate if necessary
@@ -166,7 +171,7 @@ gramine-argv-serializer "python3" "/usr/local/bin/mse-bootstrap" \
     "$SSL_APP_MODE" $SSL_APP_MODE_VALUE \
     "--host" "$HOST" \
     "--port" "443" \
-    "--app-dir" "$CODE_PATH" \
+    "--app-dir" "$APP_DIR" \
     "--uuid" "$UUID" \
     "$APPLICATION" > args
 
@@ -180,7 +185,7 @@ if [ $DRY_RUN -eq 0 ]; then
     fi
 
     # Build the gramine program
-    make clean && make SGX=1 DEBUG=0 ENCLAVE_SIZE="$ENCLAVE_SIZE" APP_DIR="$APP_DIR" SGX_SIGNER_KEY="$SGX_SIGNER_KEY"
+    make clean && make SGX=1 DEBUG="$DEBUG" ENCLAVE_SIZE="$ENCLAVE_SIZE" APP_DIR="$APP_DIR" SGX_SIGNER_KEY="$SGX_SIGNER_KEY"
 
     # Start the enclave
     if [ -z "$TIMEOUT_DATE" ]; then
@@ -196,5 +201,5 @@ else
     # Generate a dummy key if you just want to get MRENCLAVE
     gramine-sgx-gen-private-key
     # Compile for the output including MRENCLAVE
-    make clean && make SGX=1 DEBUG=0 ENCLAVE_SIZE="$ENCLAVE_SIZE" APP_DIR="$APP_DIR" SGX_SIGNER_KEY="$SGX_SIGNER_KEY"
+    make clean && make SGX=1 DEBUG="$DEBUG" ENCLAVE_SIZE="$ENCLAVE_SIZE" APP_DIR="$APP_DIR" SGX_SIGNER_KEY="$SGX_SIGNER_KEY"
 fi
