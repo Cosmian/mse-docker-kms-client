@@ -118,13 +118,13 @@ __Note__: `MRSIGNER` value should be ignored because it is randomly generated at
 
 ## Testing docker environment
 
-If you want to test that your docker image contains all the dependencies needed, `mse-test` wraps `flask run` command for you if you mount your code directory to `/app/code`:
+If you want to test that your docker image contains all the dependencies needed, `mse-test` wraps `flask run` command for you if you mount your code directory to `/mse-app`:
 
 ```console
 $ docker run --rm -ti \
     --entrypoint mse-test \
     --net host \
-    -v code/:/app/code \
+    -v code/:/mse-app \
     mse-flask:2.2.2 \
     --application app:app \
     --debug
