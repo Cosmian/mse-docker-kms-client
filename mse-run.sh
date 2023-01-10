@@ -26,6 +26,7 @@ timeout_die() {
 }
 
 set_default_variables() {
+    DEBUG=0
     ENCLAVE_SIZE=""
     EXPIRATION_DATE=""
     NO_SSL=0
@@ -105,6 +106,11 @@ parse_args() {
             shift # past argument
             ;;
 
+            --debug)
+            DEBUG=1
+            shift # past argument
+            ;;
+
             -*)
             usage
             ;;
@@ -180,7 +186,7 @@ if [ $DRY_RUN -eq 0 ]; then
     fi
 
     # Build the gramine program
-    make clean && make SGX=1 DEBUG=0 ENCLAVE_SIZE="$ENCLAVE_SIZE" APP_DIR="$APP_DIR" SGX_SIGNER_KEY="$SGX_SIGNER_KEY"
+    make clean && make SGX=1 DEBUG="$DEBUG" ENCLAVE_SIZE="$ENCLAVE_SIZE" APP_DIR="$APP_DIR" SGX_SIGNER_KEY="$SGX_SIGNER_KEY"
 
     # Start the enclave
     if [ -z "$TIMEOUT_DATE" ]; then
@@ -196,5 +202,5 @@ else
     # Generate a dummy key if you just want to get MRENCLAVE
     gramine-sgx-gen-private-key
     # Compile for the output including MRENCLAVE
-    make clean && make SGX=1 DEBUG=0 ENCLAVE_SIZE="$ENCLAVE_SIZE" APP_DIR="$APP_DIR" SGX_SIGNER_KEY="$SGX_SIGNER_KEY"
+    make clean && make SGX=1 DEBUG="$DEBUG" ENCLAVE_SIZE="$ENCLAVE_SIZE" APP_DIR="$APP_DIR" SGX_SIGNER_KEY="$SGX_SIGNER_KEY"
 fi
