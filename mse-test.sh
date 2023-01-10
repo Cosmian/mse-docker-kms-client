@@ -50,6 +50,14 @@ export PYTHONDONTWRITEBYTECODE=1
 # Other directory for __pycache__ folders
 export PYTHONPYCACHEPREFIX=/tmp
 
+export TMP_PATH=/tmp
+export HOME=/root
+export USER_DATA_PATH=/data
+export KEY_PATH=/key
+
+mkdir "$USER_DATA_PATH"
+mkdir "$KEY_PATH"
+
 # Install dependencies
 if [ -e "$APP_DIR/requirements.txt" ]; then
     echo "Installing deps..."
