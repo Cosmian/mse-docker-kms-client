@@ -11,7 +11,7 @@ usage() {
 
 set_default_variables() {
     APPLICATION=""
-    CODE_PATH="/app/code"
+    APP_DIR="/mse-app"
     DEBUG=""
 }
 
@@ -51,15 +51,15 @@ export PYTHONDONTWRITEBYTECODE=1
 export PYTHONPYCACHEPREFIX=/tmp
 
 # Install dependencies
-if [ -e "$CODE_PATH/requirements.txt" ]; then
+if [ -e "$APP_DIR/requirements.txt" ]; then
     echo "Installing deps..."
-    pip install -r $CODE_PATH/requirements.txt
+    pip install -r "$APP_DIR/requirements.txt"
 fi
 
-pushd $CODE_PATH
+pushd $APP_DIR
 
 if [ -z "$DEBUG" ]; then
-    PYTHONPATH="." flask --app "$APPLICATION" run --host=0.0.0.0
+    PYTHONPATH="$(realpath .)" flask --app "$APPLICATION" run --host=0.0.0.0
 else
-    PYTHONPATH="." flask --app "$APPLICATION" "$DEBUG" run --host=0.0.0.0
+    PYTHONPATH="$(realpath .)" flask --app "$APPLICATION" "$DEBUG" run --host=0.0.0.0
 fi

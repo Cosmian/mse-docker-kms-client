@@ -24,7 +24,7 @@ fs.mounts = [
   { path = "{{ python.stdlib }}", uri = "file:{{ python.stdlib }}" },
   { path = "{{ python.distlib }}", uri = "file:{{ python.distlib }}" },
   { path = "/usr/local/lib", uri = "file:/usr/local/lib" },
-  { path = "/app", uri = "file:{{ app_dir }}/" },
+  { path = "/mse-app", uri = "file:{{ app_dir }}/" },
   { path = "/tmp", type = "tmpfs" },
   { path = "/root", uri = "file:data/", type = "encrypted",  key_name = "_sgx_mrenclave" },
   { path = "/key", uri = "file:key/", type = "encrypted",  key_name = "_sgx_mrenclave" },
