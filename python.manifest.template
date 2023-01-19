@@ -8,8 +8,8 @@ loader.env.PYTHONPYCACHEPREFIX = "/tmp"
 loader.env.PYTHONUNBUFFERED = "1"
 loader.env.TMP_PATH = "/tmp"
 loader.env.HOME = "/root"
-loader.env.USER_DATA_PATH = "/data"
 loader.env.KEY_PATH = "/key"
+loader.env.SECRETS_PATH = "/root/.cache/mse/secrets.json"
 
 loader.argv_src_file = "file:args"
 
@@ -28,7 +28,6 @@ fs.mounts = [
   { path = "/mse-app", uri = "file:{{ app_dir }}/" },
   { path = "/tmp", type = "tmpfs" },
   { path = "/root", uri = "file:home/", type = "encrypted",  key_name = "_sgx_mrenclave" },
-  { path = "/data", uri = "file:data/", type = "encrypted",  key_name = "_sgx_mrenclave" },
   { path = "/key", uri = "file:key/", type = "encrypted",  key_name = "_sgx_mrenclave" },
 ]
 
