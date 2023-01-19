@@ -52,10 +52,9 @@ export PYTHONPYCACHEPREFIX=/tmp
 
 export TMP_PATH=/tmp
 export HOME=/root
-export USER_DATA_PATH=/data
 export KEY_PATH=/key
+export SECRETS_PATH=/root/.cache/mse/secrets.json
 
-mkdir "$USER_DATA_PATH"
 mkdir "$KEY_PATH"
 
 # Install dependencies
@@ -64,7 +63,7 @@ if [ -e "$APP_DIR/requirements.txt" ]; then
     pip install -r "$APP_DIR/requirements.txt"
 fi
 
-pushd $APP_DIR
+pushd "$APP_DIR" > /dev/null
 
 if [ -z "$DEBUG" ]; then
     PYTHONPATH="$(realpath .)" flask --app "$APPLICATION" run --host=0.0.0.0

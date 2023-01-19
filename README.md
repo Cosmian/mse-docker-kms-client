@@ -34,12 +34,12 @@ $ docker build -t mse-flask:2.2.2
 First compress your Python flask application:
 
 ```console
-$ tree code
-code
+$ tree mse_src/
+mse_src
 └── app.py
 
 0 directories, 2 files
-$ cat code/app.py
+$ cat mse_src/app.py
 from flask import Flask
 
 app = Flask(__name__)
@@ -47,7 +47,7 @@ app = Flask(__name__)
 @app.route('/')
 def hello():
     return "Hello World!"
-$ tar -cvf /tmp/app.tar --directory=code app.py
+$ tar -cvf /tmp/app.tar --directory=mse_src app.py
 ```
 
 then generate a signer RSA key for the enclave:
@@ -124,10 +124,12 @@ If you want to test that your docker image contains all the dependencies needed,
 $ docker run --rm -ti \
     --entrypoint mse-test \
     --net host \
-    -v code/:/mse-app \
+    -v mse_src:/mse-app \
     mse-flask:2.2.2 \
     --application app:app \
     --debug
 $ # default host and port of flask developement server
 $ curl http://127.0.0.1:5000
 ```
+
+To use your `secrets.json`, just add `-v secrets.json:/root/.cache/mse/secrets.json` to mount the file.
