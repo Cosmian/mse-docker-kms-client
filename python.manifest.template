@@ -6,10 +6,12 @@ loader.env.LD_LIBRARY_PATH = "{{ python.stdlib }}/lib:/lib:/usr/lib:{{ arch_libd
 loader.env.PYTHONDONTWRITEBYTECODE = "1"
 loader.env.PYTHONPYCACHEPREFIX = "/tmp"
 loader.env.PYTHONUNBUFFERED = "1"
+loader.env.PYTHONPATH = "/mse-app"
 loader.env.TMP_PATH = "/tmp"
 loader.env.HOME = "/root"
 loader.env.KEY_PATH = "/key"
 loader.env.SECRETS_PATH = "/root/.cache/mse/secrets.json"
+loader.env.MODULE_PATH = "/mse-app"
 
 loader.argv_src_file = "file:args"
 
@@ -25,10 +27,11 @@ fs.mounts = [
   { path = "{{ python.stdlib }}", uri = "file:{{ python.stdlib }}" },
   { path = "{{ python.distlib }}", uri = "file:{{ python.distlib }}" },
   { path = "/usr/local/lib", uri = "file:/usr/local/lib" },
-  { path = "/mse-app", uri = "file:{{ app_dir }}/" },
   { path = "/tmp", type = "tmpfs" },
+  { path = "/tmp/app", uri = "file:{{ app_dir }}/" },
   { path = "/root", uri = "file:home/", type = "encrypted",  key_name = "_sgx_mrenclave" },
   { path = "/key", uri = "file:key/", type = "encrypted",  key_name = "_sgx_mrenclave" },
+  { path = "/mse-app", uri = "file:code/", type = "encrypted",  key_name = "_sgx_mrenclave" },
 ]
 
 sgx.nonpie_binary = true

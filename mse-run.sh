@@ -34,7 +34,7 @@ set_default_variables() {
     CODE_TARBALL=""
     APPLICATION=""
     CERTIFICATE_PATH=""
-    APP_DIR="/mse-app"
+    APP_DIR="/tmp/app"
     CERT_PATH="$APP_DIR/fullchain.pem"
     SGX_SIGNER_KEY="$HOME/.config/gramine/enclave-key.pem"
     DRY_RUN=0
