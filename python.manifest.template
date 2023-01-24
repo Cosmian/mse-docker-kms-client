@@ -6,7 +6,6 @@ loader.env.LD_LIBRARY_PATH = "{{ python.stdlib }}/lib:/lib:/usr/lib:{{ arch_libd
 loader.env.PYTHONDONTWRITEBYTECODE = "1"
 loader.env.PYTHONPYCACHEPREFIX = "/tmp"
 loader.env.PYTHONUNBUFFERED = "1"
-loader.env.PYTHONPATH = "/mse-app"
 loader.env.TMP_PATH = "/tmp"
 loader.env.HOME = "/root"
 loader.env.KEY_PATH = "/key"
