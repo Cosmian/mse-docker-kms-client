@@ -64,10 +64,8 @@ if [ -e "$APP_DIR/requirements.txt" ]; then
     pip install -r "$APP_DIR/requirements.txt"
 fi
 
-pushd "$APP_DIR" > /dev/null
-
 if [ -z "$DEBUG" ]; then
-    PYTHONPATH="$(realpath .)" flask --app "$APPLICATION" run --host=0.0.0.0
+    PYTHONPATH="$(realpath $APP_DIR)" hypercorn --bind 0.0.0.0:5000 --worker-class uvloop --workers 1 "$APPLICATION"
 else
-    PYTHONPATH="$(realpath .)" flask --app "$APPLICATION" "$DEBUG" run --host=0.0.0.0
+    PYTHONPATH="$(realpath $APP_DIR)" hypercorn --bind 0.0.0.0:5000 --worker-class uvloop --workers 1 --log-level DEBUG "$APPLICATION"
 fi
