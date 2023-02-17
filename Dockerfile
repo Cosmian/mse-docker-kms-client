@@ -32,7 +32,7 @@ RUN apt-get update && apt-get install --no-install-recommends -qq -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Gramine APT repository with public key
-RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/gramine-keyring.gpg] https://packages.gramineproject.io/ focal main" >> /etc/apt/sources.list.d/gramine.list \
+RUN echo "deb [arch=amd64 signed-by=/usr/share/keyrings/gramine-keyring.gpg] https://packages.gramineproject.io/ 1.3 main" >> /etc/apt/sources.list.d/gramine.list \
     && curl -fsSLo /usr/share/keyrings/gramine-keyring.gpg https://packages.gramineproject.io/gramine-keyring.gpg
 
 # Intel SGX APT repository with public key
