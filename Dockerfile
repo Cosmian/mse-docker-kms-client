@@ -33,10 +33,10 @@ RUN apt-get update && apt-get install --no-install-recommends -qq -y \
     rm -rf /var/lib/apt/lists/* && \
     python3 -m pip install 'meson>=0.56' 'tomli>=1.1.0' 'tomli-w>=0.4.0'
 
-# TODO: specify the proper commit to checkout
 RUN git clone https://github.com/gramineproject/gramine
 WORKDIR /root/gramine
-RUN meson setup build/ --buildtype=release \
+RUN git checkout 9eff514112d9ca5398e0575c80e524e55a6a9a88 && \
+    meson setup build/ --buildtype=release \
         -Ddirect=enabled \
         -Dsgx=enabled \
         -Dsgx_driver_include_path=/usr/src/linux-headers-$KERNEL_VERSION/arch/x86/include/uapi \
