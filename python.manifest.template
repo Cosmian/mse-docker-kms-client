@@ -16,6 +16,7 @@ loader.env.MODULE_PATH = "/mse-app"
 loader.argv_src_file = "file:args"
 
 sys.enable_extra_runtime_domain_names_conf = true
+sys.disallow_subprocesses = true
 
 fs.mounts = [
   { path = "/lib", uri = "file:{{ gramine.runtimedir() }}" },
