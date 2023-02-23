@@ -10,7 +10,7 @@ endif
 .PHONY: all
 all: python.manifest
 ifeq ($(SGX),1)
-all: python.manifest.sgx python.sig python.token
+all: python.manifest.sgx python.sig
 endif
 
 %.manifest: %.manifest.template
@@ -19,6 +19,9 @@ endif
 		-Darch_libdir=$(ARCH_LIBDIR) \
 		-Denclave_size=$(ENCLAVE_SIZE) \
 		-Dapp_dir=$(APP_DIR) \
+		-Dhome_dir=$(HOME_DIR) \
+		-Dkey_dir=$(KEY_DIR) \
+		-Dcode_dir=$(CODE_DIR) \
 		-Dentrypoint=$(realpath $(shell sh -c "command -v python3")) \
 		$< > $@
 
@@ -35,9 +38,6 @@ sgx_outputs: python.manifest
 		--key $(SGX_SIGNER_KEY) \
 		--output python.manifest.sgx \
 		--manifest python.manifest
-
-%.token: %.sig
-	gramine-sgx-get-token --output $@ --sig $<
 
 .PHONY: clean
 clean:
