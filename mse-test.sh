@@ -58,6 +58,9 @@ export MODULE_PATH=/mse-app
 
 mkdir "$KEY_PATH"
 
+# shellcheck source=/dev/null
+. "$GRAMINE_VENV/bin/activate"
+
 # Install dependencies
 if [ -e "$APP_DIR/requirements.txt" ]; then
     echo "Installing deps..."
