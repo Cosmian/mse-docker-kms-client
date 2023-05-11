@@ -35,7 +35,7 @@ RUN apt-get update && apt-get install --no-install-recommends -qq -y \
 
 RUN git clone https://github.com/gramineproject/gramine
 WORKDIR /root/gramine
-RUN git checkout 9eff514112d9ca5398e0575c80e524e55a6a9a88 && \
+RUN git checkout cd6a9cca9585110a9bcd5c63dcc75b5c4d49466b && \
     meson setup build/ --buildtype=release \
         -Ddirect=enabled \
         -Dsgx=enabled \
