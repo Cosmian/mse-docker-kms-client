@@ -11,6 +11,7 @@ loader.env.TMP_PATH = "/tmp"
 loader.env.HOME = "/root"
 loader.env.KEY_PATH = "/key"
 loader.env.SECRETS_PATH = "/root/.cache/mse/secrets.json"
+loader.env.SEALED_SECRETS_PATH = "/root/.cache/mse/sealed_secrets.json"
 loader.env.MODULE_PATH = "/mse-app"
 
 loader.argv_src_file = "file:args"
