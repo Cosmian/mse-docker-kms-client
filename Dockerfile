@@ -70,6 +70,7 @@ RUN apt-get update && apt-get install --no-install-recommends -qq -y \
     python3-click \
     python3-jinja2 \
     python3-pyelftools \
+    python3-toml \
     python3-venv \
     gnupg \
     ca-certificates \
