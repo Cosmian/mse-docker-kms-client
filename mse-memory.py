@@ -3,7 +3,7 @@
 from pathlib import Path
 import sys
 
-import toml
+import tomli
 
 units = {"B": 1, "K": 1024, "M": 1024**2, "G": 1024**3, "T": 1024**4}
 
@@ -26,7 +26,8 @@ def parse_human_readable(size):
 
 def run(manifest_path: Path):
     """Read the manifest.sgx to determine the effective enclave size."""
-    manifest = toml.load(manifest_path)
+    with open(manifest_path, "rb") as f:
+        manifest = tomli.load(f)
 
     enclave_size = parse_human_readable(manifest["sgx"]["enclave_size"])
 
