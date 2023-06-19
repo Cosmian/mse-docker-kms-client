@@ -27,7 +27,7 @@ fs.mounts = [
   { path = "/usr/local/bin/mse-bootstrap", uri = "file:{{ env.get('GRAMINE_VENV', '/usr/local') }}/bin/mse-bootstrap" },
   { path = "/usr/local/lib/python3.8", uri = "file:{{ env.get('GRAMINE_VENV', '/usr/local') }}/lib/python3.8" },
   { path = "/tmp", type = "tmpfs" },
-  { path = "/tmp/app", uri = "file:{{ app_dir }}/" },
+  { path = "/opt/app", uri = "file:{{ app_dir }}/" },
   { path = "/root", uri = "file:{{ home_dir }}/", type = "encrypted",  key_name = "_sgx_mrenclave" },
   { path = "/key", uri = "file:{{ key_dir }}/", type = "encrypted",  key_name = "_sgx_mrenclave" },
   { path = "/mse-app", uri = "file:{{ code_dir }}/", type = "encrypted",  key_name = "_sgx_mrenclave" },

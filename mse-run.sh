@@ -46,7 +46,7 @@ set_default_variables() {
     SUBJECT="CN=cosmian.app,O=Cosmian Tech,C=FR,L=Paris,ST=Ile-de-France"
 
     # Constant variables
-    APP_DIR="/tmp/app"
+    APP_DIR="/opt/app"
     CERT_PATH="$APP_DIR/fullchain.pem"
     SGX_SIGNER_KEY="$HOME/.config/gramine/enclave-key.pem"
     CODE_DIR="code"
