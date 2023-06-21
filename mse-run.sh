@@ -3,22 +3,21 @@
 set -e
 
 usage() {
-    echo "mse-run usage: $0 --size <size> (--certificate <cert.pem> | --ratls <expiration_timestamp> | --no-ssl) --code <tarball_path> --san <domain_name> --application <module:application> --id <uuid> [--host <host>] [--port <port>] [--subject <subject>] [--timeout <seconds>] [--dry-run] [--memory] "
+    echo "mse-run usage: $0 --size <size> --san <domain_name> --application <module:application> --id <uuid> [--host <host>] [--port <port>] [--subject <subject>] [--expiration <expiration_timestamp>] [--timeout <seconds>] [--dry-run] [--memory] "
     echo ""
-    echo "Example (1): $0 --size 8G --code /tmp/app.tar --ratls 1669155711 --san localhost --application app:app --id 533a2b83-4bc5-4a9c-955e-208c530bfd15"
+    echo "The code tar [mandatory] (app.tar) and the SSL certificate [optional] (fullchain.pem) should be placed in $PACKAGE_DIR"
     echo ""
-    echo "Example (2): $0 --size 8G --code /tmp/app.tar --certificate /tmp/cert.pem --san localhost --application app:app --id 533a2b83-4bc5-4a9c-955e-208c530bfd15"
-    echo ""
-    echo "Example (3): $0 --size 8G --code /tmp/app.tar --no-ssl --san localhost --application app:app --id 533a2b83-4bc5-4a9c-955e-208c530bfd15"
+    echo "Example: $0 --size 8G --expiration 1669155711 --san localhost --application app:app --id 533a2b83-4bc5-4a9c-955e-208c530bfd15"
     echo ""
     echo "Arguments:"
     echo -e "\t--debug      put the enclave in debug mode"
+    echo -e "\t--dry-run    allow to compute MRENCLAVE value from a non-sgx machine"
+    echo -e "\t--expiration the expiration date of the ratls. Mandatory if no certificate provided in $PACKAGE_DIR"
+    echo -e "\t--force      regenerate and recompile files if they are already existed from another enclave"
     echo -e "\t--host       set the server host (default: $HOST)"
+    echo -e "\t--memory     print the memory usage"
     echo -e "\t--port       set the server port (default: $PORT)"
     echo -e "\t--subject    set the ratls certificat subject as an RFC 4514 string (default: $SUBJECT)"
-    echo -e "\t--dry-run    allow to compute MRENCLAVE value from a non-sgx machine"
-    echo -e "\t--force      regenerate and recompile files if they are already existed from another enclave"
-    echo -e "\t--memory     print the memory usage"
     echo -e "\t--timeout    stop the configuration server after this delay (in seconds)"
 
     exit 1
@@ -27,16 +26,13 @@ usage() {
 set_default_variables() {
     # Mandatory args (initialized empty)
     ENCLAVE_SIZE=""
-    EXPIRATION_DATE=""
-    NO_SSL=0
-    CODE_TARBALL=""
     APPLICATION=""
-    CERTIFICATE_PATH=""
-    TIMEOUT=""
     ID=""
     SUBJECT_ALTERNATIVE_NAME=""
 
     # Optional args
+    EXPIRATION_DATE=""
+    TIMEOUT=""
     DEBUG=0
     DRY_RUN=0
     MEMORY=0
@@ -46,7 +42,13 @@ set_default_variables() {
     SUBJECT="CN=cosmian.app,O=Cosmian Tech,C=FR,L=Paris,ST=Ile-de-France"
 
     # Constant variables
-    APP_DIR="/opt/app"
+    PACKAGE_DIR="/opt/input" # Location of the src package
+    PACKAGE_CODE_TARBALL="$PACKAGE_DIR/app.tar"
+    PACKAGE_CERT_PATH="$PACKAGE_DIR/fullchain.pem"
+
+    # We will uncompress in the same directy than input
+    # Because we don't want to take disk space on the space allocated to the user in the docker
+    APP_DIR="/opt/input/app" 
     CERT_PATH="$APP_DIR/fullchain.pem"
     SGX_SIGNER_KEY="$HOME/.config/gramine/enclave-key.pem"
     CODE_DIR="code"
@@ -66,25 +68,8 @@ parse_args() {
             shift # past value
             ;;
 
-            --certificate)
-            CERTIFICATE_PATH="$2"
-            shift # past argument
-            shift # past value
-            ;;
-
-            --ratls)
+            --expiration)
             EXPIRATION_DATE="$2"
-            shift # past argument
-            shift # past value
-            ;;
-
-            --no-ssl)
-            NO_SSL=1
-            shift # past argument
-            ;;
-
-            --code)
-            CODE_TARBALL="$2"
             shift # past argument
             shift # past value
             ;;
@@ -157,14 +142,15 @@ parse_args() {
         esac
     done
 
-    if [ -z "$ENCLAVE_SIZE" ] || [ -z "$CODE_TARBALL" ] || [ -z "$SUBJECT_ALTERNATIVE_NAME" ] || [ -z "$APPLICATION" ] || [ -z "$ID" ]
+    if [ -z "$ENCLAVE_SIZE" ] || [ -z "$SUBJECT_ALTERNATIVE_NAME" ] || [ -z "$APPLICATION" ] || [ -z "$ID" ]
     then
         usage
     fi
 
-    if [ -z "$CERTIFICATE_PATH" ] && [ -z "$EXPIRATION_DATE" ] && [ $NO_SSL -eq 0 ]
+    if [ -z "$EXPIRATION_DATE" ] && ! [ -e "$PACKAGE_CERT_PATH" ]
     then
-        usage
+        echo "You have to use --expiration when the certificate is not providing in $PACKAGE_PATH"
+        exit 1
     fi
 }
 
@@ -181,7 +167,7 @@ export PYTHONPYCACHEPREFIX=/tmp
 if [ ! -f $MANIFEST_SGX ] || [ $FORCE -eq 1 ]; then
     echo "Untar the code..."
     mkdir -p "$APP_DIR"
-    tar xvf "$CODE_TARBALL" -C "$APP_DIR" --no-same-owner
+    tar xvf "$PACKAGE_CODE_TARBALL" -C "$APP_DIR" --no-same-owner
 
     # Install dependencies
     # /!\ should not be used to verify MRENCLAVE on client side
@@ -200,24 +186,18 @@ if [ ! -f $MANIFEST_SGX ] || [ $FORCE -eq 1 ]; then
     fi
 
     # Prepare the certificate if necessary
-    if [ -n "$CERTIFICATE_PATH" ]; then
-        cp "$CERTIFICATE_PATH" "$CERT_PATH"
+    if [ -f "$PACKAGE_CERT_PATH" ]; then
+        cp "$PACKAGE_CERT_PATH" "$CERT_PATH"
+        SSL_APP_MODE="--certificate"
+        SSL_APP_MODE_VALUE="$CERT_PATH"
+    else
+        SSL_APP_MODE="--ratls"
+        SSL_APP_MODE_VALUE="$EXPIRATION_DATE"
     fi
 
     # Remove previous generated files if exists
     if [ $FORCE -eq 1 ]; then
         rm -rf $CODE_DIR $HOME_DIR $KEY_DIR
-    fi
-
-    if [ $NO_SSL -eq 1 ]; then
-        SSL_APP_MODE="--no-ssl"
-        SSL_APP_MODE_VALUE=""
-    elif [ -z "$CERTIFICATE_PATH" ]; then
-        SSL_APP_MODE="--ratls"
-        SSL_APP_MODE_VALUE="$EXPIRATION_DATE"
-    else
-        SSL_APP_MODE="--certificate"
-        SSL_APP_MODE_VALUE="$CERT_PATH"
     fi
 
     TIMEOUT_MODE=""
