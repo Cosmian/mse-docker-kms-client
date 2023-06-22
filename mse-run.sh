@@ -149,7 +149,7 @@ parse_args() {
 
     if [ -z "$EXPIRATION_DATE" ] && ! [ -e "$PACKAGE_CERT_PATH" ]
     then
-        echo "You have to use --expiration when the certificate is not providing in $PACKAGE_PATH"
+        echo "You have to use --expiration when the certificate is not providing in $PACKAGE_DIR"
         exit 1
     fi
 }
@@ -162,11 +162,12 @@ export PYTHONDONTWRITEBYTECODE=1
 # Other directory for __pycache__ folders
 export PYTHONPYCACHEPREFIX=/tmp
 
+OWNER_GROUP=$(stat -c "%u:%g" "$PACKAGE_CODE_TARBALL")
+
 # If the manifest exist, ignore all the installation and compilation steps
 # Do it anyways if --force
 if [ ! -f $MANIFEST_SGX ] || [ $FORCE -eq 1 ]; then
     echo "Untar the code..."
-    OWNER_GROUP=$(stat -c "%u:%g" "$PACKAGE_CODE_TARBALL")
     mkdir -p "$APP_DIR"
     tar xvf "$PACKAGE_CODE_TARBALL" -C "$APP_DIR" --no-same-owner
     # We should put the same owner to the untar files to be able to 
@@ -192,6 +193,7 @@ if [ ! -f $MANIFEST_SGX ] || [ $FORCE -eq 1 ]; then
     # Prepare the certificate if necessary
     if [ -f "$PACKAGE_CERT_PATH" ]; then
         cp "$PACKAGE_CERT_PATH" "$CERT_PATH"
+        chown -R "$OWNER_GROUP" "$CERT_PATH"
         SSL_APP_MODE="--certificate"
         SSL_APP_MODE_VALUE="$CERT_PATH"
     else
