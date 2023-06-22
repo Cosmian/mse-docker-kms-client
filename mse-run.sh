@@ -166,8 +166,12 @@ export PYTHONPYCACHEPREFIX=/tmp
 # Do it anyways if --force
 if [ ! -f $MANIFEST_SGX ] || [ $FORCE -eq 1 ]; then
     echo "Untar the code..."
+    OWNER_GROUP=$(stat -c "%u:%g" "$PACKAGE_CODE_TARBALL")
     mkdir -p "$APP_DIR"
     tar xvf "$PACKAGE_CODE_TARBALL" -C "$APP_DIR" --no-same-owner
+    # We should put the same owner to the untar files to be able to 
+    # remove them outside the docker when computing the MREnclave for instance
+    chown -R "$OWNER_GROUP" "$APP_DIR"
 
     # Install dependencies
     # /!\ should not be used to verify MRENCLAVE on client side
