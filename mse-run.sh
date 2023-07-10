@@ -3,53 +3,57 @@
 set -e
 
 usage() {
-    echo "mse-run usage: $0 --size <size> (--certificate <cert.pem> | --self-signed <expiration_timestamp> | --no-ssl) --code <tarball_path> --host <host> --application <module:application> --uuid <uuid> [--timeout <timeout_timestamp>] [--dry-run] [--memory] "
+    echo "mse-run usage: $0 --size <size> --san <domain_name> --application <module:application> --id <uuid> [--host <host>] [--port <port>] [--subject <subject>] [--expiration <expiration_timestamp>] [--timeout <seconds>] [--dry-run] [--memory] "
     echo ""
-    echo "Example (1): $0 --size 8G --code /tmp/app.tar --self-signed 1669155711 --host localhost --application app:app --uuid 533a2b83-4bc5-4a9c-955e-208c530bfd15"
+    echo "The code tar [mandatory] (app.tar) and the SSL certificate [optional] (fullchain.pem) should be placed in $PACKAGE_DIR"
     echo ""
-    echo "Example (2): $0 --size 8G --code /tmp/app.tar --certificate /tmp/cert.pem --host localhost --application app:app --uuid 533a2b83-4bc5-4a9c-955e-208c530bfd15"
-    echo ""
-    echo "Example (3): $0 --size 8G --code /tmp/app.tar --no-ssl --host localhost --application app:app --uuid 533a2b83-4bc5-4a9c-955e-208c530bfd15"
+    echo "Example: $0 --size 8G --expiration 1669155711 --san localhost --application app:app --id 533a2b83-4bc5-4a9c-955e-208c530bfd15"
     echo ""
     echo "Arguments:"
     echo -e "\t--debug      put the enclave in debug mode"
     echo -e "\t--dry-run    allow to compute MRENCLAVE value from a non-sgx machine"
+    echo -e "\t--expiration the expiration date of the ratls. Mandatory if no certificate provided in $PACKAGE_DIR"
     echo -e "\t--force      regenerate and recompile files if they are already existed from another enclave"
+    echo -e "\t--host       set the server host (default: $HOST)"
     echo -e "\t--memory     print the memory usage"
-    echo -e "\t--timeout    stop the enclave after this delay"
+    echo -e "\t--port       set the server port (default: $PORT)"
+    echo -e "\t--subject    set the ratls certificat subject as an RFC 4514 string (default: $SUBJECT)"
+    echo -e "\t--timeout    stop the configuration server after this delay (in seconds)"
 
     exit 1
 }
 
-timeout_die() {
-    STATUS=$?
-    if [ $STATUS -ge 124 ]; then
-        exit 0
-    else
-        exit $STATUS
-    fi
-}
-
 set_default_variables() {
-    DEBUG=0
+    # Mandatory args (initialized empty)
     ENCLAVE_SIZE=""
-    EXPIRATION_DATE=""
-    NO_SSL=0
-    HOST=""
-    CODE_TARBALL=""
     APPLICATION=""
-    CERTIFICATE_PATH=""
-    APP_DIR="/tmp/app"
+    ID=""
+    SUBJECT_ALTERNATIVE_NAME=""
+
+    # Optional args
+    EXPIRATION_DATE=""
+    TIMEOUT=""
+    DEBUG=0
+    DRY_RUN=0
+    MEMORY=0
+    FORCE=0
+    HOST="0.0.0.0"
+    PORT="443"
+    SUBJECT="CN=cosmian.app,O=Cosmian Tech,C=FR,L=Paris,ST=Ile-de-France"
+
+    # Constant variables
+    PACKAGE_DIR="/opt/input" # Location of the src package
+    PACKAGE_CODE_TARBALL="$PACKAGE_DIR/app.tar"
+    PACKAGE_CERT_PATH="$PACKAGE_DIR/fullchain.pem"
+
+    # We will uncompress in the same directy than input
+    # Because we don't want to take disk space on the space allocated to the user in the docker
+    APP_DIR="/opt/input/app" 
     CERT_PATH="$APP_DIR/fullchain.pem"
     SGX_SIGNER_KEY="$HOME/.config/gramine/enclave-key.pem"
     CODE_DIR="code"
     HOME_DIR="home"
     KEY_DIR="key"
-    DRY_RUN=0
-    MEMORY=0
-    FORCE=0
-    TIMEOUT_DATE=""
-    UUID=""
     MANIFEST_SGX="python.manifest.sgx"
 }
 
@@ -64,25 +68,8 @@ parse_args() {
             shift # past value
             ;;
 
-            --certificate)
-            CERTIFICATE_PATH="$2"
-            shift # past argument
-            shift # past value
-            ;;
-
-            --self-signed)
+            --expiration)
             EXPIRATION_DATE="$2"
-            shift # past argument
-            shift # past value
-            ;;
-
-            --no-ssl)
-            NO_SSL=1
-            shift # past argument
-            ;;
-
-            --code)
-            CODE_TARBALL="$2"
             shift # past argument
             shift # past value
             ;;
@@ -93,20 +80,38 @@ parse_args() {
             shift # past value
             ;;
 
+            --port)
+            PORT="$2"
+            shift # past argument
+            shift # past value
+            ;;
+
             --application)
             APPLICATION="$2"
             shift # past argument
             shift # past value
             ;;
 
-            --uuid)
-            UUID="$2"
+            --id)
+            ID="$2"
+            shift # past argument
+            shift # past value
+            ;;
+
+            --subject)
+            SUBJECT="$2"
+            shift # past argument
+            shift # past value
+            ;;
+
+            --san)
+            SUBJECT_ALTERNATIVE_NAME="$2"
             shift # past argument
             shift # past value
             ;;
 
             --timeout)
-            TIMEOUT_DATE="$2"
+            TIMEOUT="$2"
             shift # past argument
             shift # past value
             ;;
@@ -137,14 +142,15 @@ parse_args() {
         esac
     done
 
-    if [ -z "$ENCLAVE_SIZE" ] || [ -z "$CODE_TARBALL" ] || [ -z "$HOST" ] || [ -z "$APPLICATION" ] || [ -z "$UUID" ]
+    if [ -z "$ENCLAVE_SIZE" ] || [ -z "$SUBJECT_ALTERNATIVE_NAME" ] || [ -z "$APPLICATION" ] || [ -z "$ID" ]
     then
         usage
     fi
 
-    if [ -z "$CERTIFICATE_PATH" ] && [ -z "$EXPIRATION_DATE" ] && [ $NO_SSL -eq 0 ]
+    if [ -z "$EXPIRATION_DATE" ] && ! [ -e "$PACKAGE_CERT_PATH" ]
     then
-        usage
+        echo "You have to use --expiration when the certificate is not providing in $PACKAGE_DIR"
+        exit 1
     fi
 }
 
@@ -156,12 +162,17 @@ export PYTHONDONTWRITEBYTECODE=1
 # Other directory for __pycache__ folders
 export PYTHONPYCACHEPREFIX=/tmp
 
+OWNER_GROUP=$(stat -c "%u:%g" "$PACKAGE_CODE_TARBALL")
+
 # If the manifest exist, ignore all the installation and compilation steps
 # Do it anyways if --force
 if [ ! -f $MANIFEST_SGX ] || [ $FORCE -eq 1 ]; then
     echo "Untar the code..."
     mkdir -p "$APP_DIR"
-    tar xvf "$CODE_TARBALL" -C "$APP_DIR"
+    tar xvf "$PACKAGE_CODE_TARBALL" -C "$APP_DIR" --no-same-owner
+    # We should put the same owner to the untar files to be able to 
+    # remove them outside the docker when computing the MREnclave for instance
+    chown -R "$OWNER_GROUP" "$APP_DIR"
 
     # Install dependencies
     # /!\ should not be used to verify MRENCLAVE on client side
@@ -180,8 +191,14 @@ if [ ! -f $MANIFEST_SGX ] || [ $FORCE -eq 1 ]; then
     fi
 
     # Prepare the certificate if necessary
-    if [ -n "$CERTIFICATE_PATH" ]; then
-        cp "$CERTIFICATE_PATH" "$CERT_PATH"
+    if [ -f "$PACKAGE_CERT_PATH" ]; then
+        cp "$PACKAGE_CERT_PATH" "$CERT_PATH"
+        chown -R "$OWNER_GROUP" "$CERT_PATH"
+        SSL_APP_MODE="--certificate"
+        SSL_APP_MODE_VALUE="$CERT_PATH"
+    else
+        SSL_APP_MODE="--ratls"
+        SSL_APP_MODE_VALUE="$EXPIRATION_DATE"
     fi
 
     # Remove previous generated files if exists
@@ -189,15 +206,9 @@ if [ ! -f $MANIFEST_SGX ] || [ $FORCE -eq 1 ]; then
         rm -rf $CODE_DIR $HOME_DIR $KEY_DIR
     fi
 
-    if [ $NO_SSL -eq 1 ]; then
-        SSL_APP_MODE="--no-ssl"
-        SSL_APP_MODE_VALUE=""
-    elif [ -z "$CERTIFICATE_PATH" ]; then
-        SSL_APP_MODE="--self-signed"
-        SSL_APP_MODE_VALUE="$EXPIRATION_DATE"
-    else
-        SSL_APP_MODE="--certificate"
-        SSL_APP_MODE_VALUE="$CERT_PATH"
+    TIMEOUT_MODE=""
+    if [ -n "$TIMEOUT" ]; then
+        TIMEOUT_MODE="--timeout"
     fi
 
     # Prepare gramine argv
@@ -206,9 +217,12 @@ if [ ! -f $MANIFEST_SGX ] || [ $FORCE -eq 1 ]; then
     gramine-argv-serializer "/usr/bin/python3" "-S" "/usr/local/bin/mse-bootstrap" \
         "$SSL_APP_MODE" $SSL_APP_MODE_VALUE \
         "--host" "$HOST" \
-        "--port" "443" \
+        "--port" "$PORT" \
         "--app-dir" "$APP_DIR" \
-        "--uuid" "$UUID" \
+        "--subject" "$SUBJECT" \
+        "--san" "$SUBJECT_ALTERNATIVE_NAME" \
+        "--id" "$ID" \
+        $TIMEOUT_MODE $TIMEOUT \
         "$APPLICATION" > args
 
     echo "Generating the enclave..."
@@ -246,13 +260,5 @@ if [ $DRY_RUN -eq 0 ]; then
     fi
 
     # Start the enclave
-    if [ -z "$TIMEOUT_DATE" ]; then
-        # Forever
-        gramine-sgx ./python
-    else
-        NOW=$(date +"%s")
-        DURATION=$(( TIMEOUT_DATE-NOW ))
-        echo "Starting gramine-sgx for $DURATION seconds"
-        timeout -k 10 "$DURATION" gramine-sgx ./python || timeout_die
-    fi
+    gramine-sgx ./python
 fi
