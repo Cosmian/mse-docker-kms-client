@@ -1,10 +1,10 @@
-# MicroService Encryption Docker Base
+# Microservice Encryption Docker Base
 
 ## Overview
 
-Base docker image used for Python web application launched with [MSE](https://cosmian.com/microservice-encryption/).
+Base Docker image used for Python web application launched with [MSE](https://cosmian.com/microservice-encryption/).
 
-The docker image is built and released with GitHub Actions as below:
+The Docker image is built and released with GitHub Actions as below:
 
 ```console
 $ export BUILD_DATE="$(date "+%Y%m%d%H%M%S")"
@@ -56,11 +56,11 @@ then generate a signer RSA key for the enclave:
 $ openssl genrsa -3 -out enclave-key.pem 3072
 ```
 
-and finally run the docker container with:
+and finally run the Docker container with:
 
 - Enclave signer key mounted to `/root/.config/gramine/enclave-key.pem`
 - Tar of the python application mounted anywhere (`/tmp/app.tar` can be used)
-- `mse-run` binary as docker entrypoint
+- `mse-run` binary as Docker entrypoint
 - Enclave size in `--size` (could be `2G`, `4G`, `8G`)
 - Path of the tar mounted previously in `--code`
 - Module path of your Flask application in `--application` (usually `app:app`)
@@ -116,7 +116,7 @@ $ docker run --rm \
 __Note__: `MRSIGNER` value should be ignored because it is randomly generated at each dry run.
 
 
-## Testing docker environment
+## Testing Docker environment
 
 If you want to test that your docker image contains all the dependencies needed, `mse-test` wraps `flask run` command for you if you mount your code directory to `/mse-app`:
 
@@ -152,6 +152,6 @@ $ docker run --rm \
                     --application app:app \
                     --uuid 533a2b83-4bc5-4a9c-955e-208c530bfd15 \
                     --self-signed 1769155711 \
-                    --dry-run
+                    --dry-run \
                     --memory
 ```

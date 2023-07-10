@@ -35,7 +35,7 @@ RUN apt-get update && apt-get install --no-install-recommends -qq -y \
 
 RUN git clone https://github.com/gramineproject/gramine
 WORKDIR /root/gramine
-RUN git checkout 9eff514112d9ca5398e0575c80e524e55a6a9a88 && \
+RUN git checkout cd6a9cca9585110a9bcd5c63dcc75b5c4d49466b && \
     meson setup build/ --buildtype=release \
         -Ddirect=enabled \
         -Dsgx=enabled \
@@ -105,8 +105,8 @@ RUN apt-get update && apt-get install --no-install-recommends -qq -y \
 
 WORKDIR /opt/intel
 
-ARG SGX_SDK_VERSION=2.18.1
-ARG SGX_SDK_INSTALLER=sgx_linux_x64_sdk_2.18.101.1.bin
+ARG SGX_SDK_VERSION=2.19
+ARG SGX_SDK_INSTALLER=sgx_linux_x64_sdk_2.19.100.3.bin
 
 # Install Intel SGX SDK
 RUN curl -fsSLo $SGX_SDK_INSTALLER https://download.01.org/intel-sgx/sgx-linux/$SGX_SDK_VERSION/distro/ubuntu20.04-server/$SGX_SDK_INSTALLER \
@@ -119,7 +119,7 @@ ENV GRAMINE_VENV=/opt/venv
 RUN python3 -m venv $GRAMINE_VENV
 
 # Install MSE Enclave library
-RUN . "$GRAMINE_VENV/bin/activate" && pip install -U mse-lib-sgx==1.1.1
+RUN . "$GRAMINE_VENV/bin/activate" && pip install -U mse-lib-sgx==2.0a2
 
 WORKDIR /root
 
