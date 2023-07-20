@@ -169,10 +169,15 @@ OWNER_GROUP=$(stat -c "%u:%g" "$PACKAGE_CODE_TARBALL")
 if [ ! -f $MANIFEST_SGX ] || [ $FORCE -eq 1 ]; then
     echo "Untar the code..."
     mkdir -p "$APP_DIR"
+    APP_DIR_OWNER_GROUP=$(stat -c "%u:%g" "$APP_DIR")
+
     tar xvf "$PACKAGE_CODE_TARBALL" -C "$APP_DIR" --no-same-owner
-    # We should put the same owner to the untar files to be able to 
-    # remove them outside the docker when computing the MREnclave for instance
-    chown -R "$OWNER_GROUP" "$APP_DIR"
+
+    if [ "$OWNER_GROUP" != "$APP_DIR_OWNER_GROUP" ]; then
+        # We should put the same owner to the untar files to be able to 
+        # remove them outside the docker when computing the MREnclave for instance
+        chown -R "$OWNER_GROUP" "$APP_DIR"
+    fi
 
     # Install dependencies
     # /!\ should not be used to verify MRENCLAVE on client side
@@ -193,7 +198,12 @@ if [ ! -f $MANIFEST_SGX ] || [ $FORCE -eq 1 ]; then
     # Prepare the certificate if necessary
     if [ -f "$PACKAGE_CERT_PATH" ]; then
         cp "$PACKAGE_CERT_PATH" "$CERT_PATH"
-        chown -R "$OWNER_GROUP" "$CERT_PATH"
+
+        CERT_PATH_OWNER_GROUP=$(stat -c "%u:%g" "$CERT_PATH")
+        if [ "$OWNER_GROUP" != "$CERT_PATH_OWNER_GROUP" ]; then
+            chown -R "$OWNER_GROUP" "$CERT_PATH"
+        fi
+
         SSL_APP_MODE="--certificate"
         SSL_APP_MODE_VALUE="$CERT_PATH"
     else
