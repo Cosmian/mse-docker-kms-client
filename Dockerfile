@@ -79,3 +79,15 @@ COPY python.manifest.template .
 COPY mse-run.sh /usr/local/bin/mse-run
 COPY mse-test.sh /usr/local/bin/mse-test
 COPY mse-memory.py /usr/local/bin/mse-memory
+
+RUN . /opt/venv/bin/activate && \
+    pip3 install "flask[async]==2.2.2" \
+                 "Flask-Cors==3.0.10" \
+                 "flask-restplus==0.13.0" \
+                 "torch==1.11.0" \
+                 "tokenizers==0.13.3" \
+                 "transformers==4.16.2" \
+                 "numpy==1.21.6" \
+                 "pandas==1.3.5" \
+                 "pycryptodome==3.17" \
+                 "cosmian-kms==4.8.2"
