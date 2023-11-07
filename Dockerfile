@@ -83,6 +83,7 @@ COPY mse-memory.py /usr/local/bin/mse-memory
 RUN . /opt/venv/bin/activate && \
     pip3 install "flask[async]==2.2.2" \
                  "Werkzeug==2.2.2" \
+                 "Flask-Cors==3.0.10" \
                  "torch==1.11.0" \
                  "tokenizers==0.13.3" \
                  "transformers==4.16.2" \
