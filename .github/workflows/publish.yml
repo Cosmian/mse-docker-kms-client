@@ -25,7 +25,7 @@ jobs:
       packages: write
       contents: read
     env:
-      IMAGE: ghcr.io/cosmian/mse-base
+      IMAGE: ghcr.io/cosmian/mse-kms-client
 
     steps:
       - name: Build date

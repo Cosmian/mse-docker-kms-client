@@ -22,7 +22,7 @@ jobs:
       packages: write
       contents: read
     env:
-      IMAGE: ghcr.io/cosmian/mse-base-beta
+      IMAGE: ghcr.io/cosmian/mse-kms-client-beta
 
     steps:
       - name: Checkout
